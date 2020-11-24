@@ -1,0 +1,13 @@
+rpc:
+  enable: true
+  ip: 127.0.0.1
+  port: 8088
+log:
+  level: debug
+mysql:
+  common:
+    host: 127.0.0.1
+    port: 3306
+    username: root
+    password:
+    database: fanli_distribution

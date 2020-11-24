@@ -1,0 +1,121 @@
+stages:
+  - test
+  - build
+  - upload-image
+  - deploy
+
+test:
+  stage: test
+  variables:
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+  services:
+    - mysql:5.7
+    - redis:6-alpine
+  image: dev-reg.wanxingrowth.com/util/gobuilder:1.13
+  script:
+    - |
+      cp ${GITLAB_KEY} ~/.ssh/id_rsa
+      chmod 0400 ~/.ssh/id_rsa
+      cat ${UNIT_TEST_CONFIGURATION} > ./config/test.yaml
+      make test
+  only:
+    - branches
+
+build:
+  stage: build
+  image: dev-reg.wanxingrowth.com/util/gobuilder:1.13
+  script:
+    - |
+      cp ${GITLAB_KEY} ~/.ssh/id_rsa
+      chmod 0400 ~/.ssh/id_rsa
+      make build_service_cross_only
+
+  artifacts:
+    paths:
+      - builds/release/service
+    when: on_success
+  only:
+    - master
+    - /^release-.+?$/i
+
+upload-image:
+  stage: upload-image
+  image: luckyboys/docker:19.03.8-make-git
+  variables:
+    # When using dind service we need to instruct docker, to talk with
+    # the daemon started inside of the service. The daemon is
+    # available with a network connection instead of the default
+    # /var/run/docker.sock socket. docker:19.03-dind does this
+    # automatically by setting the DOCKER_HOST in
+    # https://github.com/docker-library/docker/blob/d45051476babc297257df490d22cbd806f1b11e4/19.03/docker-entrypoint.sh#L23-L29
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services.
+    #
+    # Note that if you're using the Kubernetes executor, the variable should be set to
+    # tcp://localhost:2376/ because of how the Kubernetes executor connects services
+    # to the job container
+    DOCKER_HOST: tcp://localhost:2375/
+    #
+    # When using dind, it's wise to use the overlayfs driver for
+    # improved performance.
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "" # https://gitlab.com/gitlab-org/gitlab-runner/issues/4501
+
+  services:
+    - name: docker:19.03-dind
+      entrypoint:
+        - "dockerd-entrypoint.sh"
+        - "--registry-mirror"
+        - "https://dockerhub.azk8s.cn"
+
+  script:
+    - echo "login" ${DOCKER_REGISTRY}
+    - docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} ${DOCKER_REGISTRY}
+    - echo "make docker image, push and clear local after uploaded"
+    - make push_service_image_clear_local_write_url
+  artifacts:
+    paths:
+      - builds/docker/latest-image
+    when: on_success
+  only:
+    - master
+    - /^release-.+?$/i
+
+deploy-qa:
+  stage: deploy
+  image: bitnami/kubectl:1.17
+  only:
+    - master
+  script:
+    - |
+      IMAGE_URL=`cat builds/docker/latest-image`
+      cat << EOF > patch.yml
+      spec:
+        template:
+          spec:
+            containers:
+            - name: ${CONTAINER_NAME}
+              image: ${IMAGE_URL}
+      EOF
+    - kubectl --kubeconfig ${KUBE_CONFIG} --insecure-skip-tls-verify=true -n ${NAMESPACE} patch deployment ${DEPLOYMENT_NAME} --patch "$(cat patch.yml)"
+
+deploy-production:
+  stage: deploy
+  image: bitnami/kubectl:1.17
+  only:
+    - /^release-.+?$/i
+  except:
+    - branches
+  script:
+    - |
+      IMAGE_URL=`cat builds/docker/latest-image`
+      cat << EOF > patch.yml
+      spec:
+        template:
+          spec:
+            containers:
+            - name: ${CONTAINER_NAME}
+              image: ${IMAGE_URL}
+      EOF
+    - kubectl --kubeconfig ${PROD_KUBE_CONFIG} --insecure-skip-tls-verify=true -n ${NAMESPACE} patch deployment ${DEPLOYMENT_NAME} --patch "$(cat patch.yml)"
