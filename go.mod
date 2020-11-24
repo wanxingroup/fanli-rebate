@@ -25,3 +25,11 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.60.2 // indirect
 )
+
+replace dev-gitlab.wanxingrowth.com/fanli/merchant => github.com/wanxingroup/fanli-merchant v0.0.0
+
+replace dev-gitlab.wanxingrowth.com/fanli/user => github.com/wanxingroup/fanli-user v0.0.2
+
+replace dev-gitlab.wanxingrowth.com/wanxin-go-micro/base => github.com/wanxingroup/base v0.2.27
+
+replace dev-gitlab.wanxingrowth.com/fanli/card => github.com/wanxingroup/fanli-card v0.0.0
