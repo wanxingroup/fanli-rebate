@@ -10,4 +10,17 @@ mysql:
     port: 3306
     username: root
     password:
-    database: fanli_distribution
+    database: fanli_rebate
+rpcServices:
+  merchant:
+    host: 127.0.0.1
+    port: 8088
+    connectTimeout: 1s
+  user:
+    host: 127.0.0.1
+    port: 8091
+    connectTimeout: 1s
+  card:
+    host: 127.0.0.1
+    port: 8093
+    connectTimeout: 1s

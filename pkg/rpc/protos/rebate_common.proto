@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package rebate.pkg.rpc.protos;
+
+option go_package = "protos";
+
+
+message Error {
+    int64 code = 1;
+    string message = 2;
+    Error stack = 3;
+}

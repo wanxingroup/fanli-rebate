@@ -10,7 +10,8 @@ const (
 
 type configuration struct {
 	launcherConfig.StandardConfig `mapstructure:",squash"`
-	Environment                   Environment `mapstructure:"environment"`
+	Environment                   Environment                  `mapstructure:"environment"`
+	RPCServices                   map[string]rpcServiceSetting `json:"rpcServices" yaml:"rpcServices"`
 }
 
 func (config *configuration) GetEnvironment() Environment {

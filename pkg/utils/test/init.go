@@ -16,6 +16,7 @@ import (
 
 	"dev-gitlab.wanxingrowth.com/fanli/rebate/pkg/config"
 	"dev-gitlab.wanxingrowth.com/fanli/rebate/pkg/constant"
+	"dev-gitlab.wanxingrowth.com/fanli/rebate/pkg/model/rebate"
 )
 
 var databaseName string
@@ -88,7 +89,10 @@ func Init() {
 		panic(err)
 	}
 
-	objects := []interface{}{}
+	objects := []interface{}{
+		rebate.RebateItem{},
+		rebate.RebateOrder{},
+	}
 
 	for _, object := range objects {
 		err = database.GetDB(constant.DatabaseConfigKey).AutoMigrate(object).Error

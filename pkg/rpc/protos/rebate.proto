@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package rebate.pkg.rpc.protos;
+
+option go_package = "protos";
+
+import "rebate_common.proto";
+
+service RebateController {
+    // 设置对应的商品返利比例
+    rpc SetRebate (SetRebateRequest) returns (SetRebateReply) {}
+    // 批量设置对应的商品返利比例
+    rpc BatchRebate (BatchRebateRequest) returns (BatchRebateReply) {}
+    // 获取商品返利比例
+    rpc GetRebate (GetRebateRequest) returns (GetRebateReply) {}
+    // 创建返利订单
+    rpc CreateRebateOrder (CreateRebateOrderRequest) returns (CreateRebateOrderReply){}
+    // 获取商品返利订单列表
+    rpc GetRebateOrderList (GetRebateOrderListRequest) returns (GetRebateOrderListReply){}
+
+}
+
+message Rebate{
+    // itemId
+    uint64 itemId = 1;
+    // 类型
+    uint32 itemType = 2;
+    // 一级拨比
+    uint32 FirstRebateRatio = 3;
+    // 二级拨比
+    uint32 SecondRebateRatio = 4;
+    // 创建人
+    uint64 CreatedBy = 5;
+    // 更新人
+    uint64 UpdatedBy = 6;
+}
+
+message SetRebateRequest{
+    Rebate Rebate = 1;
+}
+
+message SetRebateReply{
+    Error err = 1;
+    Rebate Rebate = 2;
+}
+
+message BatchRebateRequest{
+    repeated Rebate rebate = 1;
+}
+
+message BatchRebateReply{
+    Error err = 1;
+}
+
+message GetRebateRequest{
+    // itemId
+    uint64 itemId = 1;
+    // 类型
+    uint32 itemType = 2;
+}
+
+message GetRebateReply{
+    Error err = 1;
+    Rebate Rebate = 2;
+}
+
+message RebateOrder{
+    // orderId
+    uint64 orderId = 1;
+    // 用户 Id
+    uint64 userId = 2;
+    // 手机号
+    string mobile = 3;
+    // 支付金额
+    uint64 paidPrice = 4;
+    // 一级返利额度
+    uint64 firstRebate = 5;
+    // 一级用户 Id
+    uint64 firstUserId = 6;
+    // 二级返利额度
+    uint64 secondRebate = 7;
+    // 二级用户 Id
+    uint64 secondUserId = 8;
+    // 支付时间
+    string paidTime = 9;
+    // 订单类型
+    uint32 itemType = 10;
+    // shopId
+    uint64 shopId = 11;
+    // 一级返利用户的类型
+    uint32 firstType = 12;
+    // 二级返利用户的类型
+    uint32 secondType = 13;
+    // 一级返利的比例
+    uint64 firstRebateRate = 14;
+    // 二级返利的比例
+    uint64 secondRebateRate = 15;
+    // itemId
+    uint64 itemId = 16;
+    // 一级用户返利的名字
+    string FirstUserName = 17;
+    // 二级用户返利名字
+    string SecondUserName = 18;
+    // 当前用户的名字
+    string userName = 19;
+}
+
+message CreateRebateOrderRequest{
+    RebateOrder RebateOrder = 1;
+}
+
+message CreateRebateOrderReply{
+    Error err = 1;
+    RebateOrder RebateOrder = 2;
+}
+
+message GetRebateOrderListRequest{
+    uint64 orderId = 1;
+    uint32 userType = 2;
+    uint64 userId = 3;
+    string paidTimeStart = 4;
+    string paidTimeEnd = 5;
+    uint64 page = 6;
+    uint64 pageSize = 7;
+    uint64 shopId = 8;
+}
+
+message GetRebateOrderListReply{
+    Error err = 1;
+    uint64 RebateTotal = 2;
+    repeated RebateOrder RebateOrder = 3;
+    uint64 PaidTotal = 4;
+    uint64 Count = 5;
+}
+
